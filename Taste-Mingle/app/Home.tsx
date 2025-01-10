@@ -1,16 +1,25 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TextInput,
   ScrollView,
-  Image,
   TouchableOpacity,
 } from "react-native";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import RecipeCard from "../components/RecipeCard";
 
-export default function HomeScreen() {
+export default function Home() {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Filter de recepten op basis van de zoekopdracht
+  const filteredRecipes = recipes.filter((recipe) =>
+    recipe.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <View style={styles.container}>
       {/* Topbar */}
@@ -22,13 +31,17 @@ export default function HomeScreen() {
 
       {/* Search Bar */}
       <View style={styles.searchBar}>
-        <TextInput placeholder="Search recipe" style={styles.searchInput} />
-        <Ionicons
-          name="close-circle"
-          size={20}
-          color="gray"
-          style={styles.searchIcon}
+        <TextInput
+          placeholder="Search recipe"
+          value={searchQuery}
+          onChangeText={(text) => setSearchQuery(text)}
+          style={styles.searchInput}
         />
+        {searchQuery ? (
+          <TouchableOpacity onPress={() => setSearchQuery("")}>
+            <Ionicons name="close-circle" size={20} color="gray" />
+          </TouchableOpacity>
+        ) : null}
       </View>
 
       {/* Categories */}
@@ -45,32 +58,23 @@ export default function HomeScreen() {
         ))}
       </ScrollView>
 
+      {/* Recipe Cards */}
       <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-        {recipes.map((recipe) => (
-          <View key={recipe.id} style={styles.recipeCard}>
-            <Image source={recipe.image} style={styles.recipeImage} />
-            <View style={styles.recipeDetails}>
-              <View style={styles.recipeInfo}>
-                <MaterialCommunityIcons
-                  name="clock-outline"
-                  size={16}
-                  color="black"
-                />
-                <Text style={styles.recipeText}>{recipe.time}</Text>
-                <MaterialCommunityIcons name="fire" size={16} color="green" />
-                <Text style={styles.recipeText}>{recipe.calories}</Text>
-              </View>
-              <Text style={styles.recipeName}>{recipe.name}</Text>
-            </View>
-          </View>
+        {filteredRecipes.map((recipe) => (
+          <RecipeCard
+            key={recipe.id}
+            recipe={recipe}
+            onPress={() =>
+              router.push({
+                pathname: "/RecipeDetail",
+                params: {
+                  id: recipe.id.toString(),
+                },
+              })
+            }
+          />
         ))}
       </ScrollView>
-
-      <View style={styles.footer}>
-        <Ionicons name="home-outline" size={24} color="black" />
-        <Ionicons name="bookmark-outline" size={24} color="black" />
-        <Ionicons name="heart-outline" size={24} color="black" />
-      </View>
     </View>
   );
 }
@@ -108,18 +112,11 @@ const recipes = [
     image: require("../assets/mago-lassi.jpg"),
   },
 ];
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f8f9fa",
-  },
-
-  footer: {
-    backgroundColor: "#E6E3B3",
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    paddingVertical: 15,
   },
   topBar: {
     flexDirection: "row",
@@ -138,15 +135,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#fff",
     borderRadius: 10,
-    padding: 5,
-    marginBottom: 10,
+    padding: 10,
+    marginHorizontal: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
-  },
-  searchIcon: {
-    marginRight: 5,
   },
   categoriesContainer: {
     flexDirection: "row",
@@ -165,36 +164,6 @@ const styles = StyleSheet.create({
   },
   scrollViewContainer: {
     paddingHorizontal: 10,
-    paddingBottom: 20, // Ruimte aan de onderkant voor de laatste kaart
-  },
-  recipeCard: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    overflow: "hidden",
-    marginTop: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-  recipeImage: {
-    width: "100%",
-    height: 150,
-  },
-  recipeDetails: {
-    padding: 10,
-  },
-  recipeInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 5,
-  },
-  recipeText: {
-    fontSize: 14,
-    marginHorizontal: 5,
-  },
-  recipeName: {
-    fontSize: 18,
-    fontWeight: "bold",
+    paddingBottom: 20,
   },
 });
